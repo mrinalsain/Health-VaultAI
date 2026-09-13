@@ -1,0 +1,17 @@
+# HealthVault AI - Cardiovascular Risk Prediction Model Dependencies
+# Python >= 3.10 compatible (tested on Python 3.14.6)
+scikit-learn==1.9.0
+joblib==1.6.0
+pandas==3.0.3
+numpy==2.4.6
+keras==3.15.1
+torch==2.14.0
+scipy==1.18.1
+
+# HealthVault AI - Report Extraction Module Dependencies
+pdfplumber==0.11.10
+pytesseract==0.3.13
+pdf2image==1.17.0
+reportlab==5.0.1
+pypdfium2==5.13.0
+Pillow==12.2.0

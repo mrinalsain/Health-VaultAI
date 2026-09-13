@@ -1,0 +1,60 @@
+{
+    "model_name": "Logistic Regression",
+    "model_type": "sklearn",
+    "model_file": "model.pkl",
+    "threshold": 0.4,
+    "feature_order": [
+        "age",
+        "male",
+        "currentSmoker",
+        "cigsPerDay",
+        "BPMeds",
+        "prevalentHyp",
+        "diabetes",
+        "totChol",
+        "sysBP",
+        "diaBP",
+        "BMI",
+        "heartRate",
+        "glucose"
+    ],
+    "numeric_features": [
+        "age",
+        "totChol",
+        "sysBP",
+        "diaBP",
+        "BMI",
+        "heartRate",
+        "glucose",
+        "cigsPerDay"
+    ],
+    "binary_features": [
+        "male",
+        "currentSmoker",
+        "BPMeds",
+        "prevalentHyp",
+        "diabetes"
+    ],
+    "metrics": {
+        "name": "Logistic Regression",
+        "accuracy": 0.5625,
+        "precision": 0.225,
+        "recall": 0.7674418604651163,
+        "f1": 0.34797891036906853,
+        "roc_auc": 0.6997983849230736,
+        "confusion_matrix": [
+            [
+                378,
+                341
+            ],
+            [
+                30,
+                99
+            ]
+        ],
+        "tp": 99,
+        "fp": 341,
+        "tn": 378,
+        "fn": 30
+    }
+}
