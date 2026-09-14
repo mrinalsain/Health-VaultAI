@@ -44,13 +44,10 @@ def print_section(title: str):
 def test_pdf_extraction():
     print_section("Part 5.10: Testing End-to-End Extraction on Sample Reports")
     sample_dir = os.path.join(PROJECT_ROOT, "tests", "sample_reports")
-    test_files = [
-        "lipid_panel.pdf",
-        "cbc.pdf",
-        "glucose_test.pdf",
-        "ambiguous_report.pdf",
-        "unclear_note.pdf",
-    ]
+    test_files = sorted([
+        f for f in os.listdir(sample_dir)
+        if os.path.isfile(os.path.join(sample_dir, f)) and f.lower().endswith(('.pdf', '.png', '.jpg', '.jpeg'))
+    ])
 
     all_results = {}
 
