@@ -62,7 +62,7 @@ from keras import layers
 SUPERCLASSES = ["NORM", "MI", "STTC", "CD", "HYP"]
 IMAGE_SIZE = (96, 96)  # High-efficiency resolution preserving ECG grid and waveform deflections
 BATCH_SIZE = 64
-EPOCHS = 7
+EPOCHS = 50
 LEARNING_RATE = 1e-3
 
 # Paths
@@ -353,6 +353,22 @@ def main():
     model.summary()
 
     # 6. Train CNN
+    callbacks = [
+        keras.callbacks.EarlyStopping(
+            monitor="val_loss",
+            patience=8,
+            restore_best_weights=True,
+            verbose=1
+        ),
+        keras.callbacks.ReduceLROnPlateau(
+            monitor="val_loss",
+            factor=0.5,
+            patience=3,
+            min_lr=1e-5,
+            verbose=1
+        )
+    ]
+
     print(f"\nTraining Multi-Label CNN for {EPOCHS} epochs with batch size {BATCH_SIZE}...")
     t_start = time.time()
     history = model.fit(
@@ -360,10 +376,23 @@ def main():
         validation_data=(X_val, y_val),
         epochs=EPOCHS,
         batch_size=BATCH_SIZE,
+        callbacks=callbacks,
         verbose=1
     )
     train_duration = time.time() - t_start
     print(f"\nTraining completed in {train_duration:.1f}s ({train_duration/60:.2f} mins).")
+
+    # Epoch loss tracking
+    print("\n" + "=" * 50)
+    print("EPOCH-BY-EPOCH TRAINING & VALIDATION LOSS")
+    print("=" * 50)
+    print(f"{'Epoch':<8} | {'Train Loss':<15} | {'Val Loss':<15}")
+    print("-" * 50)
+    for ep in range(len(history.history["loss"])):
+        train_l = history.history["loss"][ep]
+        val_l = history.history["val_loss"][ep]
+        print(f"{ep + 1:<8} | {train_l:<15.4f} | {val_l:<15.4f}")
+    print("=" * 50 + "\n")
 
     # 7. Validation predictions and threshold optimization
     print("\nEvaluating on Validation Set...")
@@ -375,6 +404,21 @@ def main():
     print("FINAL TEST SET EVALUATION (OVERALL: 1,500 IMAGES)")
     print("=" * 75)
     test_probs = model.predict(X_test, batch_size=BATCH_SIZE, verbose=0)
+
+    # Test set probability distribution
+    print("\n" + "=" * 65)
+    print("TEST SET RAW PREDICTED PROBABILITY DISTRIBUTION (PER CLASS)")
+    print("=" * 65)
+    print(f"{'Class':<8} | {'Min Prob':<14} | {'Max Prob':<14} | {'Std Dev':<14}")
+    print("-" * 65)
+    for idx, sc in enumerate(SUPERCLASSES):
+        class_probs = test_probs[:, idx]
+        p_min = float(np.min(class_probs))
+        p_max = float(np.max(class_probs))
+        p_std = float(np.std(class_probs))
+        print(f"{sc:<8} | {p_min:<14.4f} | {p_max:<14.4f} | {p_std:<14.4f}")
+    print("=" * 65 + "\n")
+
     overall_metrics = compute_multilabel_metrics(y_test, test_probs, thresholds)
 
     print(f"{'Class':<8} | {'Threshold':<10} | {'Precision':<10} | {'Recall':<10} | {'F1-Score':<10} | {'Support':<8}")
