@@ -64,6 +64,12 @@ CLOSING_URGENT_MI = (
     "Please proceed to a doctor urgently for further evaluation."
 )
 
+CLOSING_MODERATE_LOW_MI = (
+    "Your ECG shows signs that may relate to your heart. "
+    "These are preliminary AI-assisted observations, not a confirmed diagnosis. "
+    "Please see a doctor soon for further evaluation."
+)
+
 CLOSING_NON_URGENT_ABNORMAL = (
     "You show signs of the above pattern(s) and have a higher chance of these conditions. "
     "These are preliminary AI-assisted observations, not a confirmed diagnosis — please proceed to a doctor for further evaluation."
@@ -72,6 +78,11 @@ CLOSING_NON_URGENT_ABNORMAL = (
 CLOSING_NORMAL_ONLY = (
     "Normal — no significant abnormal patterns detected in this screening. "
     "We still recommend a periodic checkup with a doctor for full clinical confirmation."
+)
+
+CLOSING_BORDERLINE = (
+    "No clear abnormal pattern detected, but some borderline signs were present. "
+    "This is a preliminary screening only. Please see a doctor for a proper check."
 )
 
 # Default per-class thresholds used for banding if metadata is not provided
@@ -164,11 +175,27 @@ def explain_ecg_result(
         norm_score = float(classification_dict["NORM"].get("confidence_score", 0.0))
 
     # 3. Determine Case A vs Case B
-    # Case A: Only NORM detected (no abnormal class above its threshold)
+    # Case A: Only NORM detected or no abnormal class above its threshold
     if len(detected_abnormals) == 0:
-        explanation_text = CLOSING_NORMAL_ONLY
+        # Borderline rule: if any abnormal class has probability >= (threshold - 0.10)
+        is_borderline = False
+        for k in abnormal_keys:
+            if k in classification_dict:
+                score = float(classification_dict[k].get("confidence_score", 0.0))
+                thresh = float(thresholds.get(k, 0.45))
+                if score >= (thresh - 0.10):
+                    is_borderline = True
+                    break
+
+        if is_borderline:
+            explanation_text = CLOSING_BORDERLINE
+            status = "borderline"
+        else:
+            explanation_text = CLOSING_NORMAL_ONLY
+            status = "normal"
+
         structured_data = {
-            "status": "normal",
+            "status": status,
             "detected_abnormal_conditions": [],
             "norm_confidence_score": norm_score,
             "has_urgent_referral": False,
@@ -190,12 +217,18 @@ def explain_ecg_result(
         blocks.append(block)
 
     # Step 3: Determine closing urgency statement
-    # IF MI is among the detected classes (regardless of position or confidence):
-    has_mi = any(item["class_key"] == "MI" for item in detected_abnormals)
-    if has_mi:
-        closing_line = CLOSING_URGENT_MI
+    # Check if MI is detected and inspect its confidence band
+    mi_item = next((item for item in detected_abnormals if item["class_key"] == "MI"), None)
+    if mi_item is not None:
+        if mi_item["confidence_band"] == "High":
+            closing_line = CLOSING_URGENT_MI
+            has_urgent = True
+        else:
+            closing_line = CLOSING_MODERATE_LOW_MI
+            has_urgent = False
     else:
         closing_line = CLOSING_NON_URGENT_ABNORMAL
+        has_urgent = False
 
     # Combine blocks and closing line
     full_explanation = "\n\n".join(blocks) + "\n\n" + closing_line
@@ -203,13 +236,13 @@ def explain_ecg_result(
     structured_data = {
         "status": "abnormal_detected",
         "detected_abnormal_conditions": detected_abnormals,
-        "has_urgent_referral": has_mi,
+        "has_urgent_referral": has_urgent,
     }
 
     return {
         "explanation_text": full_explanation,
         "structured_data": structured_data,
-        "has_urgent_referral": has_mi,
+        "has_urgent_referral": has_urgent,
     }
 
 

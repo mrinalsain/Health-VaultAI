@@ -1,0 +1,47 @@
+{
+  "classes": {
+    "NORM": {
+      "auc_all": 0.8946,
+      "auc_clean": 0.9024,
+      "auc_distorted": 0.8884,
+      "test_prevalence": 0.1107,
+      "positive_count": 166
+    },
+    "MI": {
+      "auc_all": 0.7219,
+      "auc_clean": 0.7258,
+      "auc_distorted": 0.7197,
+      "test_prevalence": 0.3373,
+      "positive_count": 506
+    },
+    "STTC": {
+      "auc_all": 0.8107,
+      "auc_clean": 0.8283,
+      "auc_distorted": 0.7933,
+      "test_prevalence": 0.396,
+      "positive_count": 594
+    },
+    "CD": {
+      "auc_all": 0.8673,
+      "auc_clean": 0.8701,
+      "auc_distorted": 0.8651,
+      "test_prevalence": 0.4253,
+      "positive_count": 638
+    },
+    "HYP": {
+      "auc_all": 0.8352,
+      "auc_clean": 0.8351,
+      "auc_distorted": 0.8377,
+      "test_prevalence": 0.5373,
+      "positive_count": 806
+    }
+  },
+  "macro_avg": {
+    "auc_all": 0.826,
+    "auc_clean": 0.8323,
+    "auc_distorted": 0.8208
+  },
+  "total_test_samples": 1500,
+  "clean_samples": 750,
+  "distorted_samples": 750
+}
